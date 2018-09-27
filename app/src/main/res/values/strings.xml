@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Bitcoin Price Tracker</string>
+    <string name="title_home">Home</string>
+    <string name="title_portfolio">Portfolio</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="cmc_sandbox_key">7d066c04-a8b3-4968-b2ca-8dad5849ae55</string>
+    <string name="cmc_pro_key">ef2e5f11-d21d-43dd-9333-1520a809b008</string>
+    <string name="crypto_not_found">Crypto Not Found</string>
+</resources>
