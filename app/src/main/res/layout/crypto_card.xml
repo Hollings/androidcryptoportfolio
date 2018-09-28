@@ -1,16 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/crypto_card"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_view"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:layout_marginBottom="4dp"
+    android:padding="5dp"
+    card_view:cardCornerRadius="4dp">
 
-        <LinearLayout
+    <RelativeLayout
+        android:id="@+id/crypto_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/title"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="BTC - Bitcoin"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+        <TextView
+            android:id="@+id/price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/title"
+            android:layout_alignEnd="@+id/title"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="$6205.78"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline3" />
+
+        <TextView
+            android:id="@+id/details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/price"
+            android:gravity="center_vertical"
+            android:text="24h: 13%"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
 
 
-        </LinearLayout>
-
+    </RelativeLayout>
 </android.support.v7.widget.CardView>

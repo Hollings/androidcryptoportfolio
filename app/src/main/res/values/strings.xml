@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Bitcoin Price Tracker</string>
+    <string name="app_name">Crypto Price Tracker</string>
     <string name="title_home">Home</string>
     <string name="title_portfolio">Portfolio</string>
     <string name="title_notifications">Notifications</string>
