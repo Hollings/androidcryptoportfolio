@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -21,6 +22,7 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Locale;
+import java.util.zip.Inflater;
 
 
 public class HomeFragment extends Fragment {
@@ -41,9 +43,12 @@ public class HomeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
+
+
         cryptoTitle = (TextView)rootView.findViewById(R.id.crypto_title);
         cryptoPrice = (TextView)rootView.findViewById(R.id.crypto_price);
         detailsField = (TextView)rootView.findViewById(R.id.details_field);
+        UpdateCryptoData(new Preference(getActivity()).getCrypto(), rootView);
 
         return rootView;
     }
@@ -51,10 +56,9 @@ public class HomeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        UpdateCryptoData(new Preference(getActivity()).getCrypto());
     }
 
-    private void UpdateCryptoData(final String crypto){
+    private void UpdateCryptoData(final String crypto, final View rootview){
         new Thread(){
             public void run(){
                 final JSONArray json = RemoteFetch.getJSON(getActivity());
@@ -69,7 +73,7 @@ public class HomeFragment extends Fragment {
                 } else {
                     handler.post(new Runnable() {
                         public void run() {
-                            renderCrypto(json);
+                            renderCrypto(json, rootview);
                         }
                     });
                 }
@@ -83,30 +87,50 @@ public class HomeFragment extends Fragment {
         return bd.doubleValue();
     }
 
-    private void renderCrypto(JSONArray json){
+    private void renderCrypto(JSONArray json, View rootView){
         Log.e("CryptoPortfolio","Rendering Crypto");
 
-        try {
+        LinearLayout linearLayout = rootView.findViewById(R.id.crypto_list);
+        LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        linearLayout.removeAllViews();
 
+        try {
+            int x = 0;
             for (int i = 0; i < json.length(); i++) {
 
                 JSONObject jsonobject = json.getJSONObject(i);
-                Log.e("CryptoPortfolio", "Home Fragment -" + jsonobject.toString() + "-");
-                cryptoTitle.setText(jsonobject.getString("name"));
                 JSONObject quote = jsonobject.getJSONObject("quote");
                 JSONObject usd = quote.getJSONObject("USD");
-                Log.e("CryptoPortfolio","Remote Fetch" + usd.toString());
-                cryptoPrice.setText("$"+Double.toString(round(usd.getDouble("price"),2)));
-                detailsField.setText(Double.toString(round(usd.getDouble("percent_change_24h"),2))+"%");
+
+                // Set Crypto Title
+                TextView crypto_title = (TextView) getLayoutInflater().inflate(R.layout.crypto_title, null);
+                crypto_title.setId(x++);
+                crypto_title.setLayoutParams(linearLayoutParams);
+                crypto_title.setText(jsonobject.getString("name"));
+
+                // Set Crypto Price
+                TextView crypto_Price = (TextView) getLayoutInflater().inflate(R.layout.crypto_price, null);
+                crypto_Price.setId(x++);
+                crypto_Price.setLayoutParams(linearLayoutParams);
+                crypto_Price.setText("$"+Double.toString(round(usd.getDouble("price"),2)));
+
+                //Set Crypto Percentage
+                TextView crypto_details = (TextView) getLayoutInflater().inflate(R.layout.crypto_details, null);
+                crypto_details.setId(x++);
+                crypto_details.setLayoutParams(linearLayoutParams);
+                crypto_details.setText(Double.toString(round(usd.getDouble("percent_change_24h"),2))+"%");
+
                 if (usd.getDouble("percent_change_24h")<0.0){
-                    detailsField.setTextColor(Color.parseColor("#B00020"));
-                    cryptoPrice.setTextColor(Color.parseColor("#B00020"));
-
+                    crypto_details.setTextColor(Color.parseColor("#B00020"));
+                    crypto_Price.setTextColor(Color.parseColor("#B00020"));
                 }else {
-                    detailsField.setTextColor(Color.parseColor("#388E3C"));
-                    cryptoPrice.setTextColor(Color.parseColor("#388E3C"));
-
+                    crypto_details.setTextColor(Color.parseColor("#388E3C"));
+                    crypto_Price.setTextColor(Color.parseColor("#388E3C"));
                 }
+                linearLayout.addView(crypto_title);
+                linearLayout.addView(crypto_Price);
+                linearLayout.addView(crypto_details);
             }
 
         }catch(Exception e){
