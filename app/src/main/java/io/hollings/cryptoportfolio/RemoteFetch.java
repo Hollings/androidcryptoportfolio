@@ -16,7 +16,18 @@ import android.util.Log;
 public class RemoteFetch {
 
     private static final String COINMARKETCAP_API =
-            "https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=100";
+            "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=100";
+    public static JSONArray CmcJson;
+
+    public static JSONArray CmcJson(Context context){
+        if (CmcJson != null){
+            return CmcJson;
+        }else{
+            Log.e("RemoteFetch","Hitting API");
+            CmcJson = getJSON(context);
+            return CmcJson;
+        }
+    }
 
     public static JSONArray getJSON(Context context){
         try {
@@ -24,7 +35,7 @@ public class RemoteFetch {
             URL url = new URL(COINMARKETCAP_API);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.addRequestProperty("X-CMC_PRO_API_KEY",
-                    context.getString(R.string.cmc_sandbox_key));
+                    context.getString(R.string.cmc_pro_key));
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(connection.getInputStream()));
             StringBuffer json = new StringBuffer(4096);
