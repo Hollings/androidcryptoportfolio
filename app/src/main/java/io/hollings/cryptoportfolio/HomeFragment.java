@@ -95,7 +95,23 @@ public class HomeFragment extends Fragment {
         float px = dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
         return px;
     }
+    private void addTotalCard(LinearLayout linearLayout,LinearLayout.LayoutParams layoutParams){
+        CardView crypto_card = (CardView) getLayoutInflater().inflate(R.layout.crypto_card, null);
 
+        TextView title = crypto_card.findViewById(R.id.title);
+        title.setText("Total Portfolio Value");
+
+        TextView price = crypto_card.findViewById(R.id.price);
+        price.setText("$"+Double.toString(HomeFragment.round(PortfolioFragment.totalPortfolioValue,2)));
+
+        TextView details = crypto_card.findViewById(R.id.details);
+        details.setVisibility(View.GONE);
+
+        crypto_card.setId(0);
+        crypto_card.setLayoutParams(layoutParams);
+
+        linearLayout.addView(crypto_card);
+    }
     private void addCryptoCard(JSONArray json,LinearLayout linearLayout,LinearLayout.LayoutParams layoutParams, int i){
         try{
             JSONObject jsonobject = json.getJSONObject(i);
@@ -129,7 +145,7 @@ public class HomeFragment extends Fragment {
         relativeLayoutParams.setMargins(15, (int)convertDpToPixel((float)10,getActivity()), 15, (int)convertDpToPixel((float)10,getActivity()));
 
         linearLayout.removeAllViews();
-
+        addTotalCard(linearLayout,relativeLayoutParams);
         try {
             for (int i = 0; i < json.length(); i++) {
                 addCryptoCard(json,linearLayout,relativeLayoutParams,i);

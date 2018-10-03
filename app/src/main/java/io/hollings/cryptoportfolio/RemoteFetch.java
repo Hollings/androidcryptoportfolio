@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.View;
 
 public class RemoteFetch {
 
@@ -28,6 +29,7 @@ public class RemoteFetch {
             return CmcJson;
         }
     }
+
 
     public static JSONArray getJSON(Context context){
         try {

@@ -1,7 +1,10 @@
 package io.hollings.cryptoportfolio;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -27,20 +30,25 @@ import java.util.ArrayList;
 
 public class PortfolioFragment extends Fragment {
 
-    private boolean editMode = false;
+    SharedPreferences spref;
+    SharedPreferences.Editor prefEditor;
+    public static Double totalPortfolioValue = 0.0;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_portfolio, container, false);
         Log.e("Portfolio Fragment", "Portfolio JSON");
+        spref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        prefEditor = spref.edit();
         UpdatePortfolioData(new Preference(getActivity()).getCrypto(), rootView);
 
-        final FloatingActionButton myFab = (FloatingActionButton) rootView.findViewById(R.id.edit_fab);
-        myFab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                save(rootView, myFab);
-            }
-        });
+//        final FloatingActionButton myFab = (FloatingActionButton) rootView.findViewById(R.id.edit_fab);
+//        myFab.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                save(rootView, myFab);
+//            }
+//        });
 
         return rootView;
     }
@@ -63,32 +71,46 @@ public class PortfolioFragment extends Fragment {
         return views;
     }
 
-    private void save(View rootView, FloatingActionButton myFab){
+    private void save(String symbol, String amount){
+        Log.e("saving","saving"+ symbol +" as " + amount);
+        prefEditor.putString(symbol,amount);
+        prefEditor.commit();
+    }
 
-//        ViewGroup viewGroup = (ViewGroup) (rootView);
-//        ArrayList<View> editTexts = getViewsByTag((ViewGroup) rootView,"edit_text");
-//        ArrayList<View> textViews = getViewsByTag((ViewGroup) rootView,"text_view");
-//
-//
-//        for (int i=0;i<editTexts.size();i++){
-//            Log.e("asdf", Integer.toString(i));
-//            if (editMode){
-//                editTexts.get(i).setVisibility(rootView.GONE);
-//                textViews.get(i).setVisibility(rootView.VISIBLE);
-//                myFab.setImageResource(android.R.drawable.ic_menu_save);
-//            }else{
-//                editTexts.get(i).setVisibility(rootView.VISIBLE);
-//                textViews.get(i).setVisibility(rootView.GONE);
-//                myFab.setImageResource(android.R.drawable.ic_menu_edit);
-//            }
-//        }
-//        editMode = !editMode;
-    };
+    private String load(String symbol){
+
+        String portfolioAmount = spref.getString(symbol, "0.0");
+        return portfolioAmount;
+    }
 
     Handler handler;
     public PortfolioFragment(){
         handler = new Handler();
     }
+
+    public double something(View rootview){
+        return getTotalPortfolioValue(rootview);
+    }
+
+    private double getTotalPortfolioValue(View rootview){
+        Double total = 0.0;
+        JSONArray json = RemoteFetch.CmcJson(getActivity());
+        try {
+            for (int i = 0; i < json.length(); i++) {
+
+                final JSONObject jsonobject = json.getJSONObject(i);
+                JSONObject quote = jsonobject.getJSONObject("quote");
+                JSONObject usd = quote.getJSONObject("USD");
+                String symbol = jsonobject.getString("symbol");
+                String amount = load(jsonobject.getString("symbol"));
+                total += getCryptoAmountInUsd(json,symbol,Double.parseDouble(amount));
+            }
+        }catch(Exception e){
+            Log.e("CryptoPortfolio", "Home Fragment 118 - " + e.getMessage());
+        }
+        Log.e("total portfolio",total.toString());
+        return total;
+    };
 
     private void UpdatePortfolioData(final String crypto, final View rootview){
         new Thread(){
@@ -105,6 +127,7 @@ public class PortfolioFragment extends Fragment {
                 } else {
                     handler.post(new Runnable() {
                         public void run() {
+                            totalPortfolioValue = getTotalPortfolioValue(rootview);
                             renderPortfolio(json, rootview);
                         }
                     });
@@ -112,13 +135,13 @@ public class PortfolioFragment extends Fragment {
             }
         }.start();
     }
+
     private static double getCryptoAmountInUsd(JSONArray json, String symbol, double amount){
         try{
             for (int i = 0; i < json.length(); i++) {
                 JSONObject jsonobject = json.getJSONObject(i);
                 JSONObject quote = jsonobject.getJSONObject("quote");
                 JSONObject usd = quote.getJSONObject("USD");
-                Log.e("CryptoPortfolio", "Home Fragment 73 - " + jsonobject.getString("symbol"));
 
                 if (jsonobject.getString("symbol")==symbol){
                     double price = usd.getDouble("price");
@@ -138,15 +161,18 @@ public class PortfolioFragment extends Fragment {
             final JSONObject jsonobject = json.getJSONObject(i);
             JSONObject quote = jsonobject.getJSONObject("quote");
             JSONObject usd = quote.getJSONObject("USD");
-
+            String symbol = jsonobject.getString("symbol");
+            String amount = load(jsonobject.getString("symbol"));
             CardView crypto_card = (CardView) getLayoutInflater().inflate(R.layout.portfolio_card, null);
 
             TextView title = crypto_card.findViewById(R.id.title);
-            title.setText(jsonobject.getString("symbol") + " - " + jsonobject.getString("name"));
+            title.setText(symbol + " - " + jsonobject.getString("name"));
             final EditText amountEdit = crypto_card.findViewById(R.id.amount_edit);
-            amountEdit.setText("0");
+
+            amountEdit.setText(amount.toString());
             TextView total_in_usd = crypto_card.findViewById(R.id.total_in_usd);
-            total_in_usd.setText("$0.00");
+
+            total_in_usd.setText("$" + Double.toString(HomeFragment.round(getCryptoAmountInUsd(json,symbol,Double.parseDouble(amount)), 2)));
 
             crypto_card.setId(i);
             crypto_card.setLayoutParams(layoutParams);
@@ -161,16 +187,31 @@ public class PortfolioFragment extends Fragment {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    String amount = s.toString();
+
 
                     ViewGroup card = (ViewGroup)amountEdit.getParent().getParent();
                     ArrayList<View> editTexts = getViewsByTag((ViewGroup) card,"calculated_price");
 
+                    String portfolioAmount = s.toString();
+                    String symbol;
+                    Double amount;
+
+                    try{
+                        symbol = jsonobject.getString("symbol");
+                        amount = Double.parseDouble(portfolioAmount);
+                    }catch (Exception e){
+                        symbol = "none";
+                        amount = 0.0;
+                    }
+
                     for (int i=0;i<editTexts.size();i++){
                         Log.e("asdf", Integer.toString(i));
-                            Log.e("onTextChanged", amount);
+                            Log.e("onTextChanged", portfolioAmount);
                             try{
-                                ((TextView)editTexts.get(i)).setText("$" + Double.toString(HomeFragment.round(getCryptoAmountInUsd(json,jsonobject.getString("symbol"),Double.parseDouble(amount)), 2)));
+
+                                ((TextView)editTexts.get(i)).setText("$" + Double.toString(HomeFragment.round(getCryptoAmountInUsd(json,symbol,amount), 2)));
+                                save(symbol,portfolioAmount);
+
                             }catch (Exception e){
                                 Log.e("asdf",e.getMessage());
                             }
